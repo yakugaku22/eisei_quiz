@@ -1,167 +1,211 @@
 :root {
   --bg: #f8fafc;
   --card: #ffffff;
-  --text: #111827;
+  --text: #1f2937;
   --muted: #6b7280;
   --primary: #2563eb;
   --primary-contrast: #ffffff;
   --correct: #16a34a;
   --wrong: #dc2626;
   --border: #e5e7eb;
-  --focus: #93c5fd;
-
-  /* ベースサイズ（スマホ前提で大きめ） */
-  --base-font: 18px;        /* ここを20pxに上げるとさらに大きくできる */
-  --radius: 16px;
-  --choice-min-h: 56px;     /* タップターゲット高さ */
-  --btn-min-h: 54px;
 }
 
-/* ========== ベース ========== */
-* { box-sizing: border-box; }
-html, body { height: 100%; }
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto,
-    "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP",
-    "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", "Noto Sans JP", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
   color: var(--text);
   background: var(--bg);
-  font-size: var(--base-font);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .site-header,
-.site-footer { text-align: center; padding: 1rem; }
+.site-footer {
+  text-align: center;
+  padding: 1rem;
+}
 
-.site-header h1 { margin: .25rem 0; line-height: 1.25; font-size: clamp(1.25rem, 4.5vw, 1.6rem); }
-.subtitle { color: var(--muted); margin: .25rem 0 0; font-size: clamp(.95rem, 3.5vw, 1.05rem); }
+.site-header h1 {
+  margin: 0.2rem 0;
+}
 
-.container { max-width: 920px; margin: 0 auto; padding: 0.9rem; }
+.subtitle {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1rem;
-  box-shadow: 0 1px 2px rgba(0,0,0,.04);
-}
-.hidden { display: none; }
-
-/* ========== 出題範囲（フォーム） ========== */
-.form-row {
-  display: flex; gap: .6rem; align-items: stretch; flex-wrap: wrap;
-  margin: .5rem 0 .9rem;
-  width: 100%;
-}
-.form-row label { color: var(--text); font-weight: 600; }
-#bankSelect {
-  border: 1px solid var(--border);
-  background: #fff;
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
-  font-size: 1rem;
-  width: 100%;            /* スマホはフル幅 */
-  min-height: var(--btn-min-h);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* ========== ヘッダー（クイズ進行） ========== */
-.quiz-header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
-.progress { color: var(--muted); font-size: 1rem; }
+.hidden {
+  display: none;
+}
 
-/* ========== 問題文・選択肢 ========== */
+.quiz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.progress {
+  color: var(--muted);
+}
+
 .question {
-  font-size: clamp(1.15rem, 4.8vw, 1.35rem);
-  margin: .75rem 0 1rem;
-  line-height: 1.6;
+  font-size: 1.25rem;
+  margin: 0.75rem 0 1rem;
 }
 
-.choices { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+.choices {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
 
 .choice-btn {
   width: 100%;
   text-align: left;
-  padding: 1rem 1.05rem;
-  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: #fff;
   cursor: pointer;
-  transition: transform .02s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
-  line-height: 1.5;
-  min-height: var(--choice-min-h);
-  font-size: 1.05rem;
+  transition: transform 0.02s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.choice-btn:hover { box-shadow: 0 1px 6px rgba(0,0,0,.06); }
-.choice-btn:active { transform: scale(.998); }
-.choice-btn.correct { border-color: var(--correct); background: #f0fdf4; }
-.choice-btn.wrong   { border-color: var(--wrong);   background: #fef2f2; }
 
-/* ========== ボタン ========== */
-.actions { margin-top: 1rem; display: flex; gap: .6rem; justify-content: flex-end; }
+.choice-btn:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
 
-/* スマホで“次へ”が常に押しやすいよう、下辺にステッキー */
+.choice-btn:active {
+  transform: scale(0.998);
+}
+
+.choice-btn.correct {
+  border-color: var(--correct);
+  background: #f0fdf4;
+}
+
+.choice-btn.wrong {
+  border-color: var(--wrong);
+  background: #fef2f2;
+}
+
 .actions {
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(to top, var(--card), rgba(255,255,255,.65));
-  padding-top: .8rem;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .btn {
   border: 1px solid var(--border);
   background: #fff;
   border-radius: 12px;
-  padding: 0.95rem 1.1rem;
+  padding: 0.7rem 1.1rem;
   cursor: pointer;
-  font-size: 1.05rem;
-  line-height: 1;
-  min-height: var(--btn-min-h);
-}
-.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-contrast); }
-.btn.secondary { background: #f1f5f9; }
-.btn.ghost { background: transparent; }
-.btn[disabled] { opacity: .55; cursor: not-allowed; }
-
-/* ========== フィードバック／結果 ========== */
-.feedback { margin-top: .8rem; min-height: 1.3rem; color: var(--muted); font-size: 1rem; }
-.score { font-size: 1.1rem; margin: .3rem 0 .6rem; }
-
-.result-actions { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
-
-.review-list { display: grid; gap: .6rem; }
-.review-item { border-top: 1px dashed var(--border); padding-top: .6rem; word-break: break-word; }
-.review-item .ok { color: var(--correct); }
-.review-item .ng { color: var(--wrong); }
-.details summary { cursor: pointer; font-weight: 700; color: var(--primary); margin-top: 1rem; }
-
-/* ========== アクセシビリティ ========== */
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.choice-btn:focus-visible, .btn:focus-visible, #bankSelect:focus-visible {
-  box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+  font-size: 1rem;
 }
 
-/* ========== デスクトップ向け（少し引き締め） ========== */
-@media (min-width: 768px) {
-  :root {
-    --base-font: 16px;
-    --choice-min-h: 48px;
-    --btn-min-h: 46px;
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+}
+
+.btn.secondary {
+  background: #f1f5f9;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.feedback {
+  margin-top: 0.75rem;
+  min-height: 1.2rem;
+  color: var(--muted);
+}
+
+.score {
+  font-size: 1.1rem;
+}
+
+.review-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.review-item {
+  border-top: 1px dashed var(--border);
+  padding-top: 0.5rem;
+}
+
+.review-item .ok {
+  color: var(--correct);
+}
+
+.review-item .ng {
+  color: var(--wrong);
+}
+
+.result-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--primary);
+  margin-top: 1rem;
+}
+
+/* ===== スマホ最適化（“見た目はそのまま”で少し大きく＆押しやすく） ===== */
+@media (max-width: 640px) {
+  .container {
+    padding: 0.9rem;
   }
-  .container { padding: 1rem; }
-  #bankSelect { width: auto; min-width: 280px; }
-  .question { font-size: clamp(1.1rem, 2.2vw, 1.3rem); }
-  .choice-btn { font-size: 1rem; padding: .9rem 1rem; }
-  .btn { padding: .75rem 1rem; font-size: 1rem; }
-  .actions { position: static; background: transparent; padding-top: 0; }
-}
-
-/* ========== さらに小さい端末（幅 <= 360px）での底上げ ========== */
-@media (max-width: 360px) {
-  :root { --base-font: 19px; } /* 超小型端末は文字をさらに大きく */
-  .choice-btn { font-size: 1.1rem; }
-  #bankSelect { font-size: 1.05rem; }
+  .question {
+    font-size: 1.3rem;     /* 元1.25rem → ちょい大きめ */
+    line-height: 1.6;
+  }
+  .choice-btn {
+    padding: 1rem 1rem;    /* タップ領域UP（見た目は同じ） */
+    min-height: 52px;      /* 指で押しやすい高さ */
+    font-size: 1.05rem;    /* 読みやすく微増 */
+  }
+  .btn {
+    padding: 0.9rem 1.1rem;
+    min-height: 48px;
+    font-size: 1.05rem;
+  }
+  .subtitle, .progress, .feedback, .score {
+    font-size: 1.02rem;    /* 文字つぶれ防止に微増 */
+  }
 }

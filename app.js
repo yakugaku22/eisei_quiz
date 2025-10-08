@@ -1,82 +1,74 @@
 // ===== ユーティリティ =====
-
-
-nextBtn.disabled = false;
+function shuffle(array) {
+  const a = array.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
-
-function nextQuestion() {
-if (current < questions.length - 1) {
-current++;
-renderQuestion();
-} else {
-finishRun();
-}
+function sample(array, n = 1, exclude = new Set()) {
+  const pool = array.filter(x => !exclude.has(x));
+  return shuffle(pool).slice(0, n);
 }
 
+// ===== 状態 =====
+let ALL_QUESTIONS = [];
+let BANKS = [];
+let questions = [];
+let current = 0;
+let score = 0;
+let answered = false;
+let wrongSet = [];
+const review = [];
 
-function finishRun() {
-elQuiz.classList.add('hidden');
-elResult.classList.remove('hidden');
-scoreText.textContent = `${questions.length}問中 ${score}問正解でした。`;
+// ===== DOM =====
+const elSetup = document.getElementById('setup');
+const elQuiz = document.getElementById('quiz');
+const elResult = document.getElementById('result');
 
+const startBtn = document.getElementById('startBtn');
+const quitBtn = document.getElementById('quitBtn');
+const nextBtn = document.getElementById('nextBtn');
 
-if (wrongSet.length > 0) {
-retryWrongBtn.classList.remove('hidden');
-} else {
-retryWrongBtn.classList.add('hidden');
-}
+const qIndexEl = document.getElementById('qIndex');
+const qTotalEl = document.getElementById('qTotal');
+const qTextEl = document.getElementById('questionText');
+const choicesEl = document.getElementById('choices');
+const feedbackEl = document.getElementById('feedback');
 
+const scoreText = document.getElementById('scoreText');
+const retryWrongBtn = document.getElementById('retryWrongBtn');
+const retryAllBtn = document.getElementById('retryAllBtn');
+const reviewList = document.getElementById('reviewList');
 
-reviewList.innerHTML = '';
-review.forEach((r, i) => {
-const div = document.createElement('div');
-div.className = 'review-item';
-const status = r.ok ? '<span class="ok">✔ 正解</span>' : '<span class="ng">✘ 不正解</span>';
-div.innerHTML = `${i+1}. ${status}<br><strong>Q:</strong> ${r.text}<br><strong>あなたの選択:</strong> ${r.selected}<br><strong>正解:</strong> ${r.correct}`;
-reviewList.appendChild(div);
-});
-}
+const bankSelect = document.getElementById('bankSelect');
+const activeBankLbl = document.getElementById('activeBankLbl');
 
+// ===== ビルド =====
+function buildBankQuestions(bank) {
+  const { name, categories } = bank; // { name, categories: {cat:[items]} }
+  const catNames = Object.keys(categories);
 
-function startQuiz(fromSet, bankName) {
-makeRun(fromSet, bankName);
-elSetup.classList.add('hidden');
-elResult.classList.add('hidden');
-elQuiz.classList.remove('hidden');
-renderQuestion();
-}
+  // アイテム -> カテゴリ（重複アイテムは最初に出てきたカテゴリを採用）
+  const itemToCat = {};
+  const allItems = [];
+  const seen = new Set();
+  for (const cat of catNames) {
+    for (const item of categories[cat]) {
+      if (seen.has(item)) continue; // 重複を避ける
+      seen.add(item);
+      itemToCat[item] = cat;
+      allItems.push(item);
+    }
+  }
 
+  const built = [];
 
-// ===== イベント =====
-startBtn.addEventListener('click', async () => {
-if (!ALL_QUESTIONS.length) {
-await loadQuestions();
-}
-const selected = bankSelect.value || '__ALL__';
-const pool = filterQuestionsByBank(selected);
-startQuiz(pool, selected);
-});
-
-
-nextBtn.addEventListener('click', nextQuestion);
-
-
-quitBtn.addEventListener('click', () => {
-finishRun();
-});
-
-
-retryWrongBtn.addEventListener('click', () => {
-if (wrongSet.length === 0) return;
-// 直前のバンク名をラベルから復元
-const bankName = activeBankLbl.textContent.replace('出題範囲：','');
-startQuiz(wrongSet, bankName);
-});
-
-
-retryAllBtn.addEventListener('click', () => {
-const selected = bankSelect.value || '__ALL__';
-const pool = filterQuestionsByBank(selected);
-startQuiz(pool, selected);
+  // A) 「次のうち、Xはどれか。」（X=◯類/◯系/◯用途）。各アイテムを正答として1回出す
+  for (const item of allItems) {
+    const cat = itemToCat[item];
+    const exclude = new Set([item]);
+    const distractors = sample(
 });

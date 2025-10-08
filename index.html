@@ -6,8 +6,12 @@
 <header class="site-header">
 <h1>衛生系科目クイズ（五者択一）</h1>
 </header>
-
-
+  
+<nav class="tabs container">
+  <button id="tabQuiz" class="tab active">クイズ</button>
+  <button id="tabGoro" class="tab">ゴロ特集</button>
+</nav>
+  
 <main class="container">
 <section id="setup" class="card">
 <h2>問題選択</h2>
@@ -58,9 +62,20 @@
 </section>
 </main>
 
+<div id="goroPane" class="hidden">
+  <section class="card">
+    <h2>ゴロ特集（見直し用）</h2>
+
+    <div class="form-row" style="margin-top:.25rem;">
+      <input id="goroSearch" type="search" class="input"
+             placeholder="キーワードでゴロ検索（例：一類、デング、甘味料…）" />
+    </div>
+
+    <div id="goroList" class="goro-list"></div>
+  </section>
+</div>
 
 <footer class="site-footer">© 2025 衛生科目分類クイズ</footer>
-
 
 <script src="app.js" defer></script>
 </body>

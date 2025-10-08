@@ -269,3 +269,40 @@ body {
 .card + .card {
   margin-top: 1rem;
 }
+/* === Mobile-first 強化 === */
+@media (max-width: 480px) {
+  html { font-size: 16px; } /* 文字つぶれ防止 */
+
+  .container { padding: 0.75rem; }
+  .card { border-radius: 14px; padding: 0.9rem 1rem; }
+
+  /* 出題範囲セレクトをフル幅＆大きめに */
+  .form-row { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  #bankSelect {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    font-size: 1rem;
+    border-radius: 12px;
+  }
+
+  .question { font-size: 1.1rem; line-height: 1.6; }
+
+  /* タップしやすい選択肢 */
+  .choice-btn {
+    padding: 1rem 1rem;
+    min-height: 52px;       /* タップターゲット確保 */
+    font-size: 1rem;
+    border-radius: 14px;
+  }
+
+  /* 次へボタンを下に張り付け（親カード内で） */
+  .actions {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, var(--card), rgba(255,255,255,0.6));
+    padding-top: 0.75rem;
+  }
+  .btn { width: 100%; padding: 0.9rem 1rem; font-size: 1rem; }
+  #quitBtn { padding: 0.6rem 0.8rem; }
+}
+

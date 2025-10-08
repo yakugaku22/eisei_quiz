@@ -7,7 +7,6 @@ function shuffle(array) {
   }
   return a;
 }
-
 function sample(array, n = 1, exclude = new Set()) {
   const pool = array.filter(x => !exclude.has(x));
   return shuffle(pool).slice(0, n);
@@ -23,7 +22,7 @@ let answered = false;
 let wrongSet = [];
 const review = [];
 
-// ===== DOM =====
+// ===== DOM（クイズ共通） =====
 const elSetup = document.getElementById("setup");
 const elQuiz = document.getElementById("quiz");
 const elResult = document.getElementById("result");
@@ -47,6 +46,22 @@ const bankSelect = document.getElementById("bankSelect");
 const activeBankLbl = document.getElementById("activeBankLbl");
 const backToStartBtn = document.getElementById("backToStartBtn");
 
+// ===== 感染症 表示ヘルパー =====
+const BASE_CLASS = ["一類", "二類", "三類", "四類", "五類"];
+function looksInfectionBank(catNames) {
+  // カテゴリ名が一～五類のみで構成されているか
+  return catNames.length > 0 && catNames.every(c => BASE_CLASS.includes(c));
+}
+function catDisplay(cat, infectionStyle) {
+  return infectionStyle ? `${cat}感染症` : cat;
+}
+function classOptions(infectionStyle) {
+  return infectionStyle ? BASE_CLASS.map(c => `${c}感染症`) : BASE_CLASS.slice();
+}
+function classAnswer(rawClass, infectionStyle) {
+  return infectionStyle ? `${rawClass}感染症` : rawClass;
+}
+
 // ===== 問題ビルド =====
 function buildBankQuestions(bank) {
   const { name, categories } = bank;
@@ -66,8 +81,9 @@ function buildBankQuestions(bank) {
   }
 
   const built = [];
+  const infectionStyle = looksInfectionBank(catNames);
 
-  // A) 「次のうち、◯◯はどれか。」形式（全アイテム分）
+  // A) 「次のうち、◯◯はどれか。」（全アイテム分）
   for (const item of allItems) {
     const cat = itemToCat[item];
     const exclude = new Set([item]);
@@ -79,25 +95,26 @@ function buildBankQuestions(bank) {
     const options = shuffle([item, ...distractors]);
     built.push({
       bank: name,
-      text: `次のうち、${cat}はどれか。`,
+      text: `次のうち、${catDisplay(cat, infectionStyle)}はどれか。`,
       options,
       answer: item
     });
   }
 
-  // B) 感染症（類別）専用の「『○○』は第何類感染症？」形式
-  const CLASS_LABELS = ["一類感染症", "二類感染症", "三類感染症", "四類感染症", "五類感染症"];
-  const looksClassified = catNames.some(c => CLASS_LABELS.includes(c));
-  if (looksClassified) {
+  // B) 逆向き：「『項目名』は第何類（感染症）？」（感染症バンクのみ）
+  if (infectionStyle) {
+    const opts = classOptions(true); // ["一類感染症", ...]
     for (const item of allItems) {
+      const raw = itemToCat[item]; // "一類" など
       built.push({
         bank: name,
         text: `『${item}』は第何類感染症？`,
-        options: CLASS_LABELS,
-        answer: itemToCat[item]
+        options: opts,
+        answer: classAnswer(raw, true) // "一類感染症" など
       });
     }
   }
+  // 感染症以外のバンクでは逆向き問題は作らない
 
   return built;
 }
@@ -156,9 +173,7 @@ function makeRun(from, bankName = "__ALL__") {
   review.length = 0;
   qTotalEl.textContent = questions.length;
   activeBankLbl.textContent =
-    bankName === "__ALL__"
-      ? "出題範囲：全部"
-      : `出題範囲：${bankName}`;
+    bankName === "__ALL__" ? "出題範囲：全部" : `出題範囲：${bankName}`;
 }
 
 function renderQuestion() {
@@ -189,37 +204,23 @@ function selectAnswer(btn, selected, correct) {
   answered = true;
 
   const buttons = choicesEl.querySelectorAll("button");
-  buttons.forEach(b => {
-    b.disabled = true;
-  });
+  buttons.forEach(b => { b.disabled = true; });
 
   if (selected === correct) {
     btn.classList.add("correct");
     feedbackEl.textContent = "正解！";
     score++;
-    review.push({
-      ok: true,
-      text: questions[current].text,
-      selected,
-      correct
-    });
+    review.push({ ok: true, text: questions[current].text, selected, correct });
   } else {
     btn.classList.add("wrong");
-    const correctBtn = Array.from(buttons).find(
-      b => b.textContent === correct
-    );
+    const correctBtn = Array.from(buttons).find(b => b.textContent === correct);
     if (correctBtn) correctBtn.classList.add("correct");
     feedbackEl.textContent = `不正解… 正解：${correct}`;
     wrongSet.push(questions[current]);
-    review.push({
-      ok: false,
-      text: questions[current].text,
-      selected,
-      correct
-    });
+    review.push({ ok: false, text: questions[current].text, selected, correct });
   }
 
-  nextBtn.disabled = false;
+  nextBtn.disabled = false; // 自分の操作で次へ
 }
 
 function nextQuestion() {
@@ -246,14 +247,8 @@ function finishRun() {
   review.forEach((r, i) => {
     const div = document.createElement("div");
     div.className = "review-item";
-    const status = r.ok
-      ? '<span class="ok">✔ 正解</span>'
-      : '<span class="ng">✘ 不正解</span>';
-    div.innerHTML = `${i + 1}. ${status}<br><strong>Q:</strong> ${
-      r.text
-    }<br><strong>あなたの選択:</strong> ${
-      r.selected
-    }<br><strong>正解:</strong> ${r.correct}`;
+    const status = r.ok ? '<span class="ok">✔ 正解</span>' : '<span class="ng">✘ 不正解</span>';
+    div.innerHTML = `${i + 1}. ${status}<br><strong>Q:</strong> ${r.text}<br><strong>あなたの選択:</strong> ${r.selected}<br><strong>正解:</strong> ${r.correct}`;
     reviewList.appendChild(div);
   });
 }
@@ -293,126 +288,127 @@ retryAllBtn.addEventListener("click", () => {
   const pool = filterQuestionsByBank(selected);
   startQuiz(pool, selected);
 });
-// ページ表示時に先にロードしてセレクトを埋めておく
+
+// 「最初の画面に戻る」ボタン
+if (backToStartBtn) {
+  backToStartBtn.addEventListener("click", () => {
+    elResult.classList.add("hidden");
+    elQuiz.classList.add("hidden");
+    elSetup.classList.remove("hidden");
+    score = 0;
+    current = 0;
+    wrongSet = [];
+    review.length = 0;
+    activeBankLbl.textContent = "出題範囲：全部";
+  });
+}
+
+// ===== 初期ロード（セレクト埋め＆既定ラベル） =====
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     if (!ALL_QUESTIONS.length) {
       await loadQuestions();
     }
-    // 既定は「全部（ミックス）」を選択状態に
     if (bankSelect && !bankSelect.value) bankSelect.value = "__ALL__";
-    // ラベルにも反映
     activeBankLbl.textContent = "出題範囲：全部";
   } catch (e) {
     console.error("初期ロードに失敗しました。", e);
   }
 });
-// セレクト変更時にラベルだけ先に更新（開始前の見た目用）
+
+// セレクト変更時にラベル表示を更新
 bankSelect.addEventListener("change", () => {
   const selected = bankSelect.value || "__ALL__";
-  activeBankLbl.textContent =
-    selected === "__ALL__" ? "出題範囲：全部" : `出題範囲：${selected}`;
+  activeBankLbl.textContent = selected === "__ALL__" ? "出題範囲：全部" : `出題範囲：${selected}`;
 });
-// 「最初の画面に戻る」ボタン
-backToStartBtn.addEventListener("click", () => {
-  elResult.classList.add("hidden");
-  elQuiz.classList.add("hidden");
-  elSetup.classList.remove("hidden");
 
-  // スコアや状態リセット
-  score = 0;
-  current = 0;
-  wrongSet = [];
-  review.length = 0;
+// ===== タブ＆ゴロ特集（安全初期化） =====
+document.addEventListener("DOMContentLoaded", () => {
+  const tabQuiz = document.getElementById("tabQuiz");
+  const tabGoro = document.getElementById("tabGoro");
+  const quizPane = document.getElementById("quizPane");
+  const goroPane = document.getElementById("goroPane");
+  const goroSearch = document.getElementById("goroSearch");
+  const goroList = document.getElementById("goroList");
 
-  // ラベルを初期化
-  activeBankLbl.textContent = "出題範囲：全部";
-});
-// === 既存の上部DOM取得の末尾に追記 ===
-const tabQuiz = document.getElementById("tabQuiz");
-const tabGoro = document.getElementById("tabGoro");
-const quizPane = document.getElementById("quizPane");
-const goroPane = document.getElementById("goroPane");
-const goroSearch = document.getElementById("goroSearch");
-const goroList = document.getElementById("goroList");
-
-// === ゴロ特集データ ===
-let GOROS = []; // {title, category, tags[], memo} の配列
-
-async function loadGoros() {
-  try {
-    const res = await fetch("goros.json");
-    const data = await res.json();
-    GOROS = data.items || [];
-    renderGoros(GOROS);
-  } catch (e) {
-    console.error("goros.json の読み込みに失敗:", e);
-    goroList.innerHTML = `<p class="progress">ゴロ一覧の読み込みに失敗しました。</p>`;
-  }
-}
-
-function renderGoros(items) {
-  if (!items.length) {
-    goroList.innerHTML = `<p class="progress">該当なし</p>`;
+  if (!tabQuiz || !tabGoro || !quizPane || !goroPane) {
+    // タブ未導入のレイアウトでもエラーにならないように
     return;
   }
-  goroList.innerHTML = items.map(it => `
-    <article class="goro-item">
-      <h3>${escapeHTML(it.title || "")}</h3>
-      <div class="meta">
-        ${it.category ? `カテゴリ：${escapeHTML(it.category)}` : ""}
-        ${it.tags && it.tags.length ? `／タグ：${it.tags.map(escapeHTML).join(", ")}` : ""}
-      </div>
-      <div class="memo">${escapeHTML(it.memo || "").replace(/\\n/g, "<br>")}</div>
-    </article>
-  `).join("");
-}
 
-function escapeHTML(s) {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+  let GOROS = []; // {title, category, tags[], memo}
 
-// === タブ切替 ===
-function activateTab(name) {
-  const quizActive = name === "quiz";
-  quizPane.classList.toggle("hidden", !quizActive);
-  goroPane.classList.toggle("hidden", quizActive);
-  tabQuiz.classList.toggle("active", quizActive);
-  tabGoro.classList.toggle("active", !quizActive);
-
-  if (!quizActive && !GOROS.length) {
-    loadGoros(); // 初回だけ読み込み
+  function escapeHTML(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
   }
-}
 
-tabQuiz.addEventListener("click", () => activateTab("quiz"));
-tabGoro.addEventListener("click", () => activateTab("goro"));
+  async function loadGoros() {
+    try {
+      const res = await fetch("goros.json");
+      const data = await res.json();
+      GOROS = data.items || [];
+      renderGoros(GOROS);
+    } catch (e) {
+      console.error("goros.json の読み込みに失敗:", e);
+      if (goroList) goroList.innerHTML = `<p class="progress">ゴロ一覧の読み込みに失敗しました。</p>`;
+    }
+  }
 
-// === ゴロ検索 ===
-if (goroSearch) {
-  goroSearch.addEventListener("input", (e) => {
-    const q = e.target.value.trim().toLowerCase();
-    if (!q) return renderGoros(GOROS);
-    const filtered = GOROS.filter(it => {
-      const hay = [
-        it.title || "",
-        it.category || "",
-        (it.tags || []).join(" "),
-        it.memo || ""
-      ].join(" ").toLowerCase();
-      return hay.includes(q);
+  function renderGoros(items) {
+    if (!goroList) return;
+    if (!items.length) {
+      goroList.innerHTML = `<p class="progress">該当なし</p>`;
+      return;
+    }
+    goroList.innerHTML = items.map(it => `
+      <article class="goro-item">
+        <h3>${escapeHTML(it.title || "")}</h3>
+        <div class="meta">
+          ${it.category ? `カテゴリ：${escapeHTML(it.category)}` : ""}
+          ${it.tags && it.tags.length ? `／タグ：${it.tags.map(escapeHTML).join(", ")}` : ""}
+        </div>
+        <div class="memo">${escapeHTML(it.memo || "").replace(/\n/g, "<br>")}</div>
+      </article>
+    `).join("");
+  }
+
+  function activateTab(name) {
+    const quizActive = name === "quiz";
+    quizPane.classList.toggle("hidden", !quizActive);
+    goroPane.classList.toggle("hidden", quizActive);
+    tabQuiz.classList.toggle("active", quizActive);
+    tabGoro.classList.toggle("active", !quizActive);
+
+    if (!quizActive && !GOROS.length) {
+      loadGoros(); // 初回だけ読み込み
+    }
+  }
+
+  tabQuiz.addEventListener("click", () => activateTab("quiz"));
+  tabGoro.addEventListener("click", () => activateTab("goro"));
+
+  if (goroSearch) {
+    goroSearch.addEventListener("input", (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      if (!q) return renderGoros(GOROS);
+      const filtered = GOROS.filter(it => {
+        const hay = [
+          it.title || "",
+          it.category || "",
+          (it.tags || []).join(" "),
+          it.memo || ""
+        ].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+      renderGoros(filtered);
     });
-    renderGoros(filtered);
-  });
-}
+  }
 
-// === ページ初期表示でクイズをアクティブに ===
-document.addEventListener("DOMContentLoaded", () => {
-  activateTab("quiz"); // 既定はクイズ
+  // 既定はクイズタブを表示
+  activateTab("quiz");
 });
-

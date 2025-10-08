@@ -1,4 +1,6 @@
 // ===== ユーティリティ =====
+const correctBtn = Array.from(buttons).find(b => b.textContent === correct);
+if (correctBtn) correctBtn.classList.add('correct');
 feedbackEl.textContent = `不正解… 正解：${correct}`;
 wrongSet.push(questions[current]);
 review.push({ ok: false, text: questions[current].text, selected, correct });

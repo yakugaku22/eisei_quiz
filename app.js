@@ -292,3 +292,24 @@ retryAllBtn.addEventListener("click", () => {
   const pool = filterQuestionsByBank(selected);
   startQuiz(pool, selected);
 });
+// ページ表示時に先にロードしてセレクトを埋めておく
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    if (!ALL_QUESTIONS.length) {
+      await loadQuestions();
+    }
+    // 既定は「全部（ミックス）」を選択状態に
+    if (bankSelect && !bankSelect.value) bankSelect.value = "__ALL__";
+    // ラベルにも反映
+    activeBankLbl.textContent = "出題範囲：全部";
+  } catch (e) {
+    console.error("初期ロードに失敗しました。", e);
+  }
+});
+// セレクト変更時にラベルだけ先に更新（開始前の見た目用）
+bankSelect.addEventListener("change", () => {
+  const selected = bankSelect.value || "__ALL__";
+  activeBankLbl.textContent =
+    selected === "__ALL__" ? "出題範囲：全部" : `出題範囲：${selected}`;
+});
+

@@ -1,82 +1,85 @@
 <!DOCTYPE html>
-<title>衛生系科目クイズ</title>
-<link rel="stylesheet" href="styles.css" />
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>衛生系科目クイズ</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<header class="site-header">
-<h1>衛生系科目クイズ（五者択一）</h1>
-</header>
-  
-<nav class="tabs container">
-  <button id="tabQuiz" class="tab active">クイズ</button>
-  <button id="tabGoro" class="tab">ゴロ特集</button>
-</nav>
-  
-<main class="container">
-<section id="setup" class="card">
-<h2>問題選択</h2>
-<div class="form-row" style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
-<label for="bankSelect"><strong>出題範囲</strong></label>
-<select id="bankSelect" class="btn secondary" title="出題バンクを選ぶ"></select>
-</div>
-<p>「開始する」を押すと、選んだ範囲から問題がシャッフルされて出題されます。</p>
-<button id="startBtn" class="btn primary">開始する</button>
-</section>
+  <header class="site-header">
+    <h1>衛生系科目クイズ（五者択一）</h1>
+  </header>
 
+  <!-- タブ -->
+  <nav class="tabs container">
+    <button id="tabQuiz" class="tab active">クイズ</button>
+    <button id="tabGoro" class="tab">ゴロ特集</button>
+  </nav>
 
-<section id="quiz" class="card hidden" aria-live="polite">
-<div class="quiz-header">
-<div>
-<div id="activeBankLbl" class="progress"></div>
-<div class="progress">第 <span id="qIndex">1</span> 問 / <span id="qTotal">0</span></div>
-</div>
-<button id="quitBtn" class="btn ghost" title="ここで終了する">ここで終了する</button>
-</div>
+  <main class="container">
+    <!-- ★ここで3セクションをまとめて囲む：quizPane -->
+    <div id="quizPane">
+      <section id="setup" class="card">
+        <h2>問題選択</h2>
+        <div class="form-row" style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+          <label for="bankSelect"><strong>出題範囲</strong></label>
+          <select id="bankSelect" class="btn secondary" title="出題バンクを選ぶ"></select>
+        </div>
+        <p>「開始する」を押すと、選んだ範囲から問題がシャッフルされて出題されます。</p>
+        <button id="startBtn" class="btn primary">開始する</button>
+      </section>
 
+      <section id="quiz" class="card hidden" aria-live="polite">
+        <div class="quiz-header">
+          <div>
+            <div id="activeBankLbl" class="progress"></div>
+            <div class="progress">第 <span id="qIndex">1</span> 問 / <span id="qTotal">0</span></div>
+          </div>
+          <button id="quitBtn" class="btn ghost" title="ここで終了する">ここで終了する</button>
+        </div>
 
-<h2 id="questionText" class="question">問題文</h2>
-<ul id="choices" class="choices" role="list"></ul>
+        <h2 id="questionText" class="question">問題文</h2>
+        <ul id="choices" class="choices" role="list"></ul>
 
+        <div class="actions">
+          <button id="nextBtn" class="btn" disabled>次の問題へ</button>
+        </div>
 
-<div class="actions">
-<button id="nextBtn" class="btn" disabled>次の問題へ</button>
-</div>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+      </section>
 
-
-<div id="feedback" class="feedback" aria-live="polite"></div>
-</section>
-
-
-<section id="result" class="card hidden">
-<h2>結果</h2>
-<p id="scoreText" class="score"></p>
-<div class="result-actions">
-<button id="retryWrongBtn" class="btn secondary hidden">間違えた問題をやり直す</button>
-<button id="retryAllBtn" class="btn">もう一度最初から</button>
-<button id="backToStartBtn" class="btn ghost">最初の画面に戻る</button>
-</div>
-<details class="details">
-<summary>今回の回答一覧（開く）</summary>
-<div id="reviewList" class="review-list"></div>
-</details>
-</section>
-</main>
-
-<div id="goroPane" class="hidden">
-  <section class="card">
-    <h2>ゴロ特集（見直し用）</h2>
-
-    <div class="form-row" style="margin-top:.25rem;">
-      <input id="goroSearch" type="search" class="input"
-             placeholder="キーワードでゴロ検索（例：一類、デング、甘味料…）" />
+      <section id="result" class="card hidden">
+        <h2>結果</h2>
+        <p id="scoreText" class="score"></p>
+        <div class="result-actions">
+          <button id="retryWrongBtn" class="btn secondary hidden">間違えた問題をやり直す</button>
+          <button id="retryAllBtn" class="btn">もう一度最初から</button>
+          <button id="backToStartBtn" class="btn ghost">最初の画面に戻る</button>
+        </div>
+        <details class="details">
+          <summary>今回の回答一覧（開く）</summary>
+          <div id="reviewList" class="review-list"></div>
+        </details>
+      </section>
     </div>
 
-    <div id="goroList" class="goro-list"></div>
-  </section>
-</div>
+    <!-- ゴロ特集ペイン（mainの中に入れる） -->
+    <div id="goroPane" class="hidden">
+      <section class="card">
+        <h2>ゴロ特集（見直し用）</h2>
+        <div class="form-row" style="margin-top:.25rem;">
+          <input id="goroSearch" type="search" class="input"
+                 placeholder="キーワードでゴロ検索（例：一類、デング、甘味料…）" />
+        </div>
+        <div id="goroList" class="goro-list"></div>
+      </section>
+    </div>
+  </main>
 
-<footer class="site-footer">© 2025 衛生科目分類クイズ</footer>
+  <footer class="site-footer">© 2025 衛生科目分類クイズ</footer>
 
-<script src="app.js" defer></script>
+  <!-- deferでもOKだが、HTML後に置くのが安全 -->
+  <script src="app.js" defer></script>
 </body>
 </html>

@@ -328,4 +328,91 @@ backToStartBtn.addEventListener("click", () => {
   // ラベルを初期化
   activeBankLbl.textContent = "出題範囲：全部";
 });
+// === 既存の上部DOM取得の末尾に追記 ===
+const tabQuiz = document.getElementById("tabQuiz");
+const tabGoro = document.getElementById("tabGoro");
+const quizPane = document.getElementById("quizPane");
+const goroPane = document.getElementById("goroPane");
+const goroSearch = document.getElementById("goroSearch");
+const goroList = document.getElementById("goroList");
+
+// === ゴロ特集データ ===
+let GOROS = []; // {title, category, tags[], memo} の配列
+
+async function loadGoros() {
+  try {
+    const res = await fetch("goros.json");
+    const data = await res.json();
+    GOROS = data.items || [];
+    renderGoros(GOROS);
+  } catch (e) {
+    console.error("goros.json の読み込みに失敗:", e);
+    goroList.innerHTML = `<p class="progress">ゴロ一覧の読み込みに失敗しました。</p>`;
+  }
+}
+
+function renderGoros(items) {
+  if (!items.length) {
+    goroList.innerHTML = `<p class="progress">該当なし</p>`;
+    return;
+  }
+  goroList.innerHTML = items.map(it => `
+    <article class="goro-item">
+      <h3>${escapeHTML(it.title || "")}</h3>
+      <div class="meta">
+        ${it.category ? `カテゴリ：${escapeHTML(it.category)}` : ""}
+        ${it.tags && it.tags.length ? `／タグ：${it.tags.map(escapeHTML).join(", ")}` : ""}
+      </div>
+      <div class="memo">${escapeHTML(it.memo || "").replace(/\\n/g, "<br>")}</div>
+    </article>
+  `).join("");
+}
+
+function escapeHTML(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+// === タブ切替 ===
+function activateTab(name) {
+  const quizActive = name === "quiz";
+  quizPane.classList.toggle("hidden", !quizActive);
+  goroPane.classList.toggle("hidden", quizActive);
+  tabQuiz.classList.toggle("active", quizActive);
+  tabGoro.classList.toggle("active", !quizActive);
+
+  if (!quizActive && !GOROS.length) {
+    loadGoros(); // 初回だけ読み込み
+  }
+}
+
+tabQuiz.addEventListener("click", () => activateTab("quiz"));
+tabGoro.addEventListener("click", () => activateTab("goro"));
+
+// === ゴロ検索 ===
+if (goroSearch) {
+  goroSearch.addEventListener("input", (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) return renderGoros(GOROS);
+    const filtered = GOROS.filter(it => {
+      const hay = [
+        it.title || "",
+        it.category || "",
+        (it.tags || []).join(" "),
+        it.memo || ""
+      ].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+    renderGoros(filtered);
+  });
+}
+
+// === ページ初期表示でクイズをアクティブに ===
+document.addEventListener("DOMContentLoaded", () => {
+  activateTab("quiz"); // 既定はクイズ
+});
 

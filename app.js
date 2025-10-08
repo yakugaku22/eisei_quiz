@@ -85,14 +85,14 @@ function buildBankQuestions(bank) {
     });
   }
 
-  // B) 感染症（類別）専用の「『○○』は第何類？」形式
-  const CLASS_LABELS = ["一類", "二類", "三類", "四類", "五類"];
+  // B) 感染症（類別）専用の「『○○』は第何類感染症？」形式
+  const CLASS_LABELS = ["一類感染症", "二類感染症", "三類感染症", "四類感染症", "五類感染症"];
   const looksClassified = catNames.some(c => CLASS_LABELS.includes(c));
   if (looksClassified) {
     for (const item of allItems) {
       built.push({
         bank: name,
-        text: `『${item}』は第何類？`,
+        text: `『${item}』は第何類感染症？`,
         options: CLASS_LABELS,
         answer: itemToCat[item]
       });

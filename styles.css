@@ -209,3 +209,49 @@ body {
     font-size: 1.02rem;    /* 文字つぶれ防止に微増 */
   }
 }
+/* --- タブ --- */
+.tabs {
+  display: flex; gap: .5rem; margin-top: -.5rem; margin-bottom: .5rem;
+}
+.tab {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 12px;
+  padding: .55rem .9rem;
+  cursor: pointer;
+}
+.tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+}
+
+/* --- ゴロ特集 --- */
+.input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 10px;
+  padding: .6rem .8rem;
+  font-size: 1rem;
+}
+.goro-list { display: grid; gap: .75rem; margin-top: .75rem; }
+.goro-item {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 12px;
+  padding: .75rem .9rem;
+}
+.goro-item h3 {
+  margin: 0 0 .35rem;
+  font-size: 1.05rem;
+}
+.goro-item .meta {
+  color: var(--muted);
+  font-size: .95rem;
+  margin-bottom: .25rem;
+}
+.goro-item .memo {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}

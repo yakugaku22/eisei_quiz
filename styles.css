@@ -1,88 +1,271 @@
 :root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-contrast: #ffffff;
+  --correct: #16a34a;
+  --wrong: #dc2626;
+  --border: #e5e7eb;
+  --focus: #93c5fd;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto,
+    "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP",
+    "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.site-header,
+.site-footer {
+  text-align: center;
+  padding: 1rem;
+}
+
+.site-header h1 {
+  margin: 0.2rem 0;
+  line-height: 1.25;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 1rem;
+}
 
 .card {
-background: var(--card);
-border: 1px solid var(--border);
-border-radius: 16px;
-padding: 1rem 1.25rem;
-box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+.hidden {
+  display: none;
+}
 
-.hidden { display: none; }
+/* --------- フォーム列（出題範囲） --------- */
+.form-row {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: .5rem 0 0.75rem;
+}
 
+.form-row label {
+  color: var(--text);
+}
 
+#bankSelect {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* --------- ヘッダー（クイズ進行） --------- */
 .quiz-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: .5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
+.progress {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
 
-.progress { color: var(--muted); }
-
-
+/* --------- 問題文・選択肢 --------- */
 .question {
-font-size: 1.25rem;
-margin: .75rem 0 1rem;
+  font-size: 1.25rem;
+  margin: 0.75rem 0 1rem;
+  line-height: 1.5;
 }
 
-
-.choices { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
-
+.choices {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
 
 .choice-btn {
-width: 100%;
-text-align: left;
-padding: .9rem 1rem;
-border-radius: 12px;
-border: 1px solid var(--border);
-background: #fff;
-cursor: pointer;
-transition: transform .02s ease, border-color .15s ease, box-shadow .15s ease;
+  width: 100%;
+  text-align: left;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  transition: transform .02s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  line-height: 1.4;
 }
-.choice-btn:hover { box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
-.choice-btn:active { transform: scale(0.998); }
 
+.choice-btn:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
 
-.choice-btn.correct { border-color: var(--correct); background: #f0fdf4; }
-.choice-btn.wrong { border-color: var(--wrong); background: #fef2f2; }
+.choice-btn:active {
+  transform: scale(0.998);
+}
 
+.choice-btn.correct {
+  border-color: var(--correct);
+  background: #f0fdf4;
+}
 
-.actions { margin-top: 1rem; display: flex; justify-content: flex-end; }
+.choice-btn.wrong {
+  border-color: var(--wrong);
+  background: #fef2f2;
+}
 
+/* --------- ボタン --------- */
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
 
 .btn {
-border: 1px solid var(--border);
-background: #fff;
-border-radius: 12px;
-padding: .7rem 1.1rem;
-cursor: pointer;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.7rem 1.1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
 }
-.btn[disabled] { opacity: .5; cursor: not-allowed; }
 
+.btn.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+}
 
-.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-contrast); }
-.btn.secondary { background: #f1f5f9; }
-.btn.ghost { background: transparent; }
+.btn.secondary {
+  background: #f1f5f9;
+}
 
+.btn.ghost {
+  background: transparent;
+}
 
-.feedback { margin-top: .75rem; min-height: 1.2rem; color: var(--muted); }
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 
+/* --------- フィードバック --------- */
+.feedback {
+  margin-top: 0.75rem;
+  min-height: 1.2rem;
+  color: var(--muted);
+}
 
-.score { font-size: 1.1rem; }
+/* --------- 結果画面 --------- */
+.score {
+  font-size: 1.1rem;
+  margin: 0.25rem 0 0.5rem;
+}
 
+.result-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+}
 
-.review-list { display: grid; gap: .5rem; }
-.review-item { border-top: 1px dashed var(--border); padding-top: .5rem; }
-.review-item .ok { color: var(--correct); }
-.review-item .ng { color: var(--wrong); }
+.review-list {
+  display: grid;
+  gap: 0.5rem;
+}
 
+.review-item {
+  border-top: 1px dashed var(--border);
+  padding-top: 0.5rem;
+  word-break: break-word;
+}
 
+.review-item .ok {
+  color: var(--correct);
+}
+
+.review-item .ng {
+  color: var(--wrong);
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--primary);
+  margin-top: 1rem;
+}
+
+/* --------- フォーカス可視化 --------- */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.choice-btn:focus-visible,
+.btn:focus-visible,
+#bankSelect:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .25);
+}
+
+/* --------- レイアウト調整（SP） --------- */
 @media (max-width: 640px) {
-.container { padding: .75rem; }
-.question { font-size: 1.1rem; }
+  .container {
+    padding: 0.75rem;
+  }
+
+  .question {
+    font-size: 1.12rem;
+  }
+
+  .choice-btn {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .quiz-header {
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+/* --------- 細かな調整 --------- */
+.site-footer {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.card + .card {
+  margin-top: 1rem;
 }

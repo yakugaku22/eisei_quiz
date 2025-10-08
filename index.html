@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>感染症類別クイズ（五者択一）</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>感染症類別クイズ</h1>
+    <p class="subtitle">五者択一／自動送りなし／途中終了＆間違い直し対応</p>
+  </header>
+
+  <main class="container">
+    <section id="setup" class="card">
+      <h2>準備</h2>
+      <p>「開始する」を押すと、問題がシャッフルされて出題されます。</p>
+      <button id="startBtn" class="btn primary">開始する</button>
+    </section>
+
+    <section id="quiz" class="card hidden" aria-live="polite">
+      <div class="quiz-header">
+        <div id="progress" class="progress">第 <span id="qIndex">1</span> 問 / <span id="qTotal">0</span></div>
+        <button id="quitBtn" class="btn ghost" title="ここで終了する">ここで終了する</button>
+      </div>
+
+      <h2 id="questionText" class="question">問題文</h2>
+      <ul id="choices" class="choices" role="list"></ul>
+
+      <div class="actions">
+        <button id="nextBtn" class="btn" disabled>次の問題へ</button>
+      </div>
+
+      <div id="feedback" class="feedback" aria-live="polite"></div>
+    </section>
+
+    <section id="result" class="card hidden">
+      <h2>結果</h2>
+      <p id="scoreText" class="score"></p>
+      <div class="result-actions">
+        <button id="retryWrongBtn" class="btn secondary hidden">間違えた問題をやり直す</button>
+        <button id="retryAllBtn" class="btn">もう一度最初から</button>
+      </div>
+      <details class="details">
+        <summary>今回の回答一覧（開く）</summary>
+        <div id="reviewList" class="review-list"></div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="site-footer">© 2025 感染症類別クイズ</footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

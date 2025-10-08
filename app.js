@@ -313,4 +313,19 @@ bankSelect.addEventListener("change", () => {
   activeBankLbl.textContent =
     selected === "__ALL__" ? "出題範囲：全部" : `出題範囲：${selected}`;
 });
+// 「最初の画面に戻る」ボタン
+backToStartBtn.addEventListener("click", () => {
+  elResult.classList.add("hidden");
+  elQuiz.classList.add("hidden");
+  elSetup.classList.remove("hidden");
+
+  // スコアや状態リセット
+  score = 0;
+  current = 0;
+  wrongSet = [];
+  review.length = 0;
+
+  // ラベルを初期化
+  activeBankLbl.textContent = "出題範囲：全部";
+});
 

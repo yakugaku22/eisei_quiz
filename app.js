@@ -45,6 +45,7 @@ const reviewList = document.getElementById("reviewList");
 
 const bankSelect = document.getElementById("bankSelect");
 const activeBankLbl = document.getElementById("activeBankLbl");
+const backToStartBtn = document.getElementById("backToStartBtn");
 
 // ===== 問題ビルド =====
 function buildBankQuestions(bank) {

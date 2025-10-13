@@ -1,5 +1,5 @@
 // ==============================
-// 衛生系科目クイズ app.js（完全統合版）
+// 衛生系科目クイズ app.js（最新版）
 // ==============================
 
 // ===== ユーティリティ =====
@@ -51,7 +51,7 @@ const bankSelect = document.getElementById("bankSelect");
 const activeBankLbl = document.getElementById("activeBankLbl");
 const backToStartBtn = document.getElementById("backToStartBtn");
 
-// ===== 感染症のクラス表示用ヘルパー =====
+// ===== 感染症クラスヘルパー =====
 const BASE_CLASS = ["一類", "二類", "三類", "四類", "五類"];
 
 function looksInfectionBank(catNames) {
@@ -75,7 +75,7 @@ function buildBankQuestions(bank) {
   const { name, categories } = bank;
   const catNames = Object.keys(categories);
 
-  // 各アイテムをカテゴリと結び付ける
+  // カテゴリごとにアイテム整理
   const itemToCat = {};
   const allItems = [];
   const seen = new Set();
@@ -91,21 +91,20 @@ function buildBankQuestions(bank) {
   const built = [];
   const infectionStyle = looksInfectionBank(catNames);
 
-  // A) 「次のうち、◯◯はどれか。」形式
+  // === 通常パターン ===
   for (const item of allItems) {
     const cat = itemToCat[item];
     const exclude = new Set([item]);
     const distractors = sample(allItems.filter(x => itemToCat[x] !== cat), 4, exclude);
-    const options = shuffle([item, ...distractors]);
     built.push({
       bank: name,
       text: `次のうち、${catDisplay(cat, infectionStyle)}はどれか。`,
-      options,
+      options: shuffle([item, ...distractors]),
       answer: item
     });
   }
 
-  // B) 感染症限定「第何類感染症？」形式
+  // === 感染症限定「第何類感染症？」 ===
   if (infectionStyle) {
     const opts = classOptions(true);
     for (const item of allItems) {
@@ -119,10 +118,45 @@ function buildBankQuestions(bank) {
     }
   }
 
+  // === カッコ内の特徴・副作用・作用部位も別問題として生成 ===
+  const featureRegex = /（(.+?)）/;
+  for (const cat of catNames) {
+    const match = cat.match(featureRegex);
+    if (!match) continue;
+
+    // カッコ内を「、」や「・」で分割して個々の特徴にする
+    const features = match[1].split(/[、・]/).map(s => s.trim()).filter(Boolean);
+    const drugs = categories[cat];
+
+    for (const f of features) {
+      let qText = "";
+      if (f.includes("副作用")) {
+        qText = `${f.replace("副作用：", "副作用として")}があるのはどれか。`;
+      } else if (f.includes("結合")) {
+        qText = `${f}するのはどれか。`;
+      } else if (f.includes("有効")) {
+        qText = `${f}なのはどれか。`;
+      } else {
+        qText = `${f}に関連するのはどれか。`;
+      }
+
+      for (const item of drugs) {
+        const exclude = new Set([item]);
+        const distractors = sample(allItems.filter(x => !drugs.includes(x)), 4, exclude);
+        built.push({
+          bank: name,
+          text: qText,
+          options: shuffle([item, ...distractors]),
+          answer: item
+        });
+      }
+    }
+  }
+
   return built;
 }
 
-// ===== データ変換 =====
+// ===== データ整形 =====
 function toBanks(data) {
   if (data.categories && !data.banks) {
     return [{ name: "感染症", categories: data.categories }];
@@ -132,12 +166,12 @@ function toBanks(data) {
 
 // ===== 問題ロード =====
 async function loadQuestions() {
-  // --- メインの questions.json ---
+  // --- questions.json ---
   const res = await fetch("questions.json");
   const data = await res.json();
   BANKS = toBanks(data);
 
-  // --- 抗菌薬分類（antibiotics.json）も追加で読み込み ---
+  // --- antibiotics.json も追加 ---
   try {
     const abRes = await fetch("antibiotics.json");
     const abData = await abRes.json();
@@ -146,7 +180,7 @@ async function loadQuestions() {
     console.error("抗菌薬分類の読み込みに失敗:", e);
   }
 
-  // --- 出題範囲セレクトボックス ---
+  // --- 出題範囲セレクト構築 ---
   bankSelect.innerHTML = "";
   const optAll = document.createElement("option");
   optAll.value = "__ALL__";
@@ -267,7 +301,7 @@ function startQuiz(fromSet, bankName) {
   renderQuestion();
 }
 
-// ===== イベント設定 =====
+// ===== イベント =====
 startBtn.addEventListener("click", async () => {
   if (!ALL_QUESTIONS.length) await loadQuestions();
   const selected = bankSelect.value || "__ALL__";

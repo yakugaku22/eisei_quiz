@@ -1,3 +1,7 @@
+// ==============================
+// 衛生系科目クイズ app.js（完全統合版）
+// ==============================
+
 // ===== ユーティリティ =====
 function shuffle(array) {
   const a = array.slice();
@@ -7,12 +11,13 @@ function shuffle(array) {
   }
   return a;
 }
+
 function sample(array, n = 1, exclude = new Set()) {
   const pool = array.filter(x => !exclude.has(x));
   return shuffle(pool).slice(0, n);
 }
 
-// ===== 状態 =====
+// ===== 状態管理 =====
 let ALL_QUESTIONS = [];
 let BANKS = [];
 let questions = [];
@@ -22,7 +27,7 @@ let answered = false;
 let wrongSet = [];
 const review = [];
 
-// ===== DOM（クイズ共通） =====
+// ===== DOM要素 =====
 const elSetup = document.getElementById("setup");
 const elQuiz = document.getElementById("quiz");
 const elResult = document.getElementById("result");
@@ -46,28 +51,31 @@ const bankSelect = document.getElementById("bankSelect");
 const activeBankLbl = document.getElementById("activeBankLbl");
 const backToStartBtn = document.getElementById("backToStartBtn");
 
-// ===== 感染症 表示ヘルパー =====
+// ===== 感染症のクラス表示用ヘルパー =====
 const BASE_CLASS = ["一類", "二類", "三類", "四類", "五類"];
+
 function looksInfectionBank(catNames) {
-  // カテゴリ名が一～五類のみで構成されているか
   return catNames.length > 0 && catNames.every(c => BASE_CLASS.includes(c));
 }
+
 function catDisplay(cat, infectionStyle) {
   return infectionStyle ? `${cat}感染症` : cat;
 }
+
 function classOptions(infectionStyle) {
   return infectionStyle ? BASE_CLASS.map(c => `${c}感染症`) : BASE_CLASS.slice();
 }
+
 function classAnswer(rawClass, infectionStyle) {
   return infectionStyle ? `${rawClass}感染症` : rawClass;
 }
 
-// ===== 問題ビルド =====
+// ===== 問題生成 =====
 function buildBankQuestions(bank) {
   const { name, categories } = bank;
   const catNames = Object.keys(categories);
 
-  // アイテム → カテゴリ（重複スキップ）
+  // 各アイテムをカテゴリと結び付ける
   const itemToCat = {};
   const allItems = [];
   const seen = new Set();
@@ -83,15 +91,11 @@ function buildBankQuestions(bank) {
   const built = [];
   const infectionStyle = looksInfectionBank(catNames);
 
-  // A) 「次のうち、◯◯はどれか。」（全アイテム分）
+  // A) 「次のうち、◯◯はどれか。」形式
   for (const item of allItems) {
     const cat = itemToCat[item];
     const exclude = new Set([item]);
-    const distractors = sample(
-      allItems.filter(x => itemToCat[x] !== cat),
-      4,
-      exclude
-    );
+    const distractors = sample(allItems.filter(x => itemToCat[x] !== cat), 4, exclude);
     const options = shuffle([item, ...distractors]);
     built.push({
       bank: name,
@@ -101,24 +105,24 @@ function buildBankQuestions(bank) {
     });
   }
 
-  // B) 逆向き：「『項目名』は第何類（感染症）？」（感染症バンクのみ）
+  // B) 感染症限定「第何類感染症？」形式
   if (infectionStyle) {
-    const opts = classOptions(true); // ["一類感染症", ...]
+    const opts = classOptions(true);
     for (const item of allItems) {
-      const raw = itemToCat[item]; // "一類" など
+      const raw = itemToCat[item];
       built.push({
         bank: name,
         text: `『${item}』は第何類感染症？`,
         options: opts,
-        answer: classAnswer(raw, true) // "一類感染症" など
+        answer: classAnswer(raw, true)
       });
     }
   }
-  // 感染症以外のバンクでは逆向き問題は作らない
 
   return built;
 }
 
+// ===== データ変換 =====
 function toBanks(data) {
   if (data.categories && !data.banks) {
     return [{ name: "感染症", categories: data.categories }];
@@ -128,16 +132,27 @@ function toBanks(data) {
 
 // ===== 問題ロード =====
 async function loadQuestions() {
+  // --- メインの questions.json ---
   const res = await fetch("questions.json");
   const data = await res.json();
   BANKS = toBanks(data);
 
-  // セレクトボックス作成
+  // --- 抗菌薬分類（antibiotics.json）も追加で読み込み ---
+  try {
+    const abRes = await fetch("antibiotics.json");
+    const abData = await abRes.json();
+    BANKS.push(...toBanks(abData));
+  } catch (e) {
+    console.error("抗菌薬分類の読み込みに失敗:", e);
+  }
+
+  // --- 出題範囲セレクトボックス ---
   bankSelect.innerHTML = "";
   const optAll = document.createElement("option");
   optAll.value = "__ALL__";
   optAll.textContent = "全部（ミックス）";
   bankSelect.appendChild(optAll);
+
   for (const b of BANKS) {
     const opt = document.createElement("option");
     opt.value = b.name;
@@ -145,7 +160,7 @@ async function loadQuestions() {
     bankSelect.appendChild(opt);
   }
 
-  // 全部の問題を生成
+  // --- 全部の問題を生成 ---
   const all = [];
   for (const b of BANKS) {
     all.push(...buildBankQuestions(b));
@@ -153,16 +168,14 @@ async function loadQuestions() {
   ALL_QUESTIONS = all;
 }
 
+// ===== 出題制御 =====
 function filterQuestionsByBank(nameOrAll) {
   if (!nameOrAll || nameOrAll === "__ALL__") return ALL_QUESTIONS;
   return ALL_QUESTIONS.filter(q => q.bank === nameOrAll);
 }
 
-// ===== 出題ロジック =====
 function makeRun(from, bankName = "__ALL__") {
-  const CAP = {
-    "特定機能食品": 20
-  };
+  const CAP = { "特定機能食品": 20 };
   let pool = shuffle(from);
   if (CAP[bankName]) pool = pool.slice(0, CAP[bankName]);
 
@@ -191,9 +204,7 @@ function renderQuestion() {
     const btn = document.createElement("button");
     btn.className = "choice-btn";
     btn.textContent = opt;
-    btn.addEventListener("click", () =>
-      selectAnswer(btn, opt, q.answer)
-    );
+    btn.addEventListener("click", () => selectAnswer(btn, opt, q.answer));
     li.appendChild(btn);
     choicesEl.appendChild(li);
   });
@@ -202,9 +213,8 @@ function renderQuestion() {
 function selectAnswer(btn, selected, correct) {
   if (answered) return;
   answered = true;
-
   const buttons = choicesEl.querySelectorAll("button");
-  buttons.forEach(b => { b.disabled = true; });
+  buttons.forEach(b => (b.disabled = true));
 
   if (selected === correct) {
     btn.classList.add("correct");
@@ -219,8 +229,7 @@ function selectAnswer(btn, selected, correct) {
     wrongSet.push(questions[current]);
     review.push({ ok: false, text: questions[current].text, selected, correct });
   }
-
-  nextBtn.disabled = false; // 自分の操作で次へ
+  nextBtn.disabled = false;
 }
 
 function nextQuestion() {
@@ -236,21 +245,18 @@ function finishRun() {
   elQuiz.classList.add("hidden");
   elResult.classList.remove("hidden");
   scoreText.textContent = `${questions.length}問中 ${score}問正解でした。`;
-
-  if (wrongSet.length > 0) {
-    retryWrongBtn.classList.remove("hidden");
-  } else {
-    retryWrongBtn.classList.add("hidden");
-  }
-
-  reviewList.innerHTML = "";
-  review.forEach((r, i) => {
-    const div = document.createElement("div");
-    div.className = "review-item";
-    const status = r.ok ? '<span class="ok">✔ 正解</span>' : '<span class="ng">✘ 不正解</span>';
-    div.innerHTML = `${i + 1}. ${status}<br><strong>Q:</strong> ${r.text}<br><strong>あなたの選択:</strong> ${r.selected}<br><strong>正解:</strong> ${r.correct}`;
-    reviewList.appendChild(div);
-  });
+  retryWrongBtn.classList.toggle("hidden", wrongSet.length === 0);
+  reviewList.innerHTML = review
+    .map(
+      (r, i) => `
+    <div class="review-item">
+      ${i + 1}. ${r.ok ? '<span class="ok">✔ 正解</span>' : '<span class="ng">✘ 不正解</span>'}<br>
+      <strong>Q:</strong> ${r.text}<br>
+      <strong>あなたの選択:</strong> ${r.selected}<br>
+      <strong>正解:</strong> ${r.correct}
+    </div>`
+    )
+    .join("");
 }
 
 function startQuiz(fromSet, bankName) {
@@ -261,35 +267,27 @@ function startQuiz(fromSet, bankName) {
   renderQuestion();
 }
 
-// ===== イベント =====
+// ===== イベント設定 =====
 startBtn.addEventListener("click", async () => {
-  if (!ALL_QUESTIONS.length) {
-    await loadQuestions();
-  }
+  if (!ALL_QUESTIONS.length) await loadQuestions();
   const selected = bankSelect.value || "__ALL__";
   const pool = filterQuestionsByBank(selected);
   startQuiz(pool, selected);
 });
 
 nextBtn.addEventListener("click", nextQuestion);
-
-quitBtn.addEventListener("click", () => {
-  finishRun();
-});
-
+quitBtn.addEventListener("click", () => finishRun());
 retryWrongBtn.addEventListener("click", () => {
   if (wrongSet.length === 0) return;
   const bankName = activeBankLbl.textContent.replace("出題範囲：", "");
   startQuiz(wrongSet, bankName);
 });
-
 retryAllBtn.addEventListener("click", () => {
   const selected = bankSelect.value || "__ALL__";
   const pool = filterQuestionsByBank(selected);
   startQuiz(pool, selected);
 });
 
-// 「最初の画面に戻る」ボタン
 if (backToStartBtn) {
   backToStartBtn.addEventListener("click", () => {
     elResult.classList.add("hidden");
@@ -303,12 +301,10 @@ if (backToStartBtn) {
   });
 }
 
-// ===== 初期ロード（セレクト埋め＆既定ラベル） =====
+// ===== 初期ロード =====
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    if (!ALL_QUESTIONS.length) {
-      await loadQuestions();
-    }
+    if (!ALL_QUESTIONS.length) await loadQuestions();
     if (bankSelect && !bankSelect.value) bankSelect.value = "__ALL__";
     activeBankLbl.textContent = "出題範囲：全部";
   } catch (e) {
@@ -316,13 +312,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// セレクト変更時にラベル表示を更新
 bankSelect.addEventListener("change", () => {
   const selected = bankSelect.value || "__ALL__";
-  activeBankLbl.textContent = selected === "__ALL__" ? "出題範囲：全部" : `出題範囲：${selected}`;
+  activeBankLbl.textContent =
+    selected === "__ALL__" ? "出題範囲：全部" : `出題範囲：${selected}`;
 });
 
-// ===== タブ＆ゴロ特集（安全初期化） =====
+// ===== ゴロ特集タブ =====
 document.addEventListener("DOMContentLoaded", () => {
   const tabQuiz = document.getElementById("tabQuiz");
   const tabGoro = document.getElementById("tabGoro");
@@ -330,13 +326,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const goroPane = document.getElementById("goroPane");
   const goroSearch = document.getElementById("goroSearch");
   const goroList = document.getElementById("goroList");
+  if (!tabQuiz || !tabGoro) return;
 
-  if (!tabQuiz || !tabGoro || !quizPane || !goroPane) {
-    // タブ未導入のレイアウトでもエラーにならないように
-    return;
-  }
-
-  let GOROS = []; // {title, category, tags[], memo}
+  let GOROS = [];
 
   function escapeHTML(s) {
     return String(s)
@@ -365,16 +357,16 @@ document.addEventListener("DOMContentLoaded", () => {
       goroList.innerHTML = `<p class="progress">該当なし</p>`;
       return;
     }
-    goroList.innerHTML = items.map(it => `
+    goroList.innerHTML = items
+      .map(
+        it => `
       <article class="goro-item">
         <h3>${escapeHTML(it.title || "")}</h3>
-        <div class="meta">
-          ${it.category ? `カテゴリ：${escapeHTML(it.category)}` : ""}
-          ${it.tags && it.tags.length ? `／タグ：${it.tags.map(escapeHTML).join(", ")}` : ""}
-        </div>
+        <div class="meta">${it.category ? `カテゴリ：${escapeHTML(it.category)}` : ""}</div>
         <div class="memo">${escapeHTML(it.memo || "").replace(/\n/g, "<br>")}</div>
-      </article>
-    `).join("");
+      </article>`
+      )
+      .join("");
   }
 
   function activateTab(name) {
@@ -383,32 +375,23 @@ document.addEventListener("DOMContentLoaded", () => {
     goroPane.classList.toggle("hidden", quizActive);
     tabQuiz.classList.toggle("active", quizActive);
     tabGoro.classList.toggle("active", !quizActive);
-
-    if (!quizActive && !GOROS.length) {
-      loadGoros(); // 初回だけ読み込み
-    }
+    if (!quizActive && !GOROS.length) loadGoros();
   }
 
   tabQuiz.addEventListener("click", () => activateTab("quiz"));
   tabGoro.addEventListener("click", () => activateTab("goro"));
 
   if (goroSearch) {
-    goroSearch.addEventListener("input", (e) => {
+    goroSearch.addEventListener("input", e => {
       const q = e.target.value.trim().toLowerCase();
       if (!q) return renderGoros(GOROS);
       const filtered = GOROS.filter(it => {
-        const hay = [
-          it.title || "",
-          it.category || "",
-          (it.tags || []).join(" "),
-          it.memo || ""
-        ].join(" ").toLowerCase();
+        const hay = [it.title || "", it.category || "", it.memo || ""].join(" ").toLowerCase();
         return hay.includes(q);
       });
       renderGoros(filtered);
     });
   }
 
-  // 既定はクイズタブを表示
   activateTab("quiz");
 });

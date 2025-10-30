@@ -47,7 +47,7 @@ const bankSelect = document.getElementById("bankSelect");
 const activeBankLbl = document.getElementById("activeBankLbl");
 const backToStartBtn = document.getElementById("backToStartBtn");
 
-// ===== 感染症ラベル設定 =====
+// ===== 感染症設定 =====
 const BASE_CLASS = ["一類", "二類", "三類", "四類", "五類"];
 
 function looksInfectionBank(catNames) {
@@ -77,7 +77,7 @@ function buildBankQuestions(bank, globalSeen) {
   for (const cat of catNames) {
     for (const itemRaw of categories[cat]) {
       const itemID = itemRaw.includes("#") ? itemRaw : `${itemRaw}#${name}`;
-      if (globalSeen.has(itemRaw) || globalSeen.has(itemID)) continue; // 重複スキップ
+      if (globalSeen.has(itemRaw) || globalSeen.has(itemID)) continue;
       globalSeen.add(itemRaw);
       globalSeen.add(itemID);
       itemToCat[itemRaw] = cat;
@@ -101,7 +101,7 @@ function buildBankQuestions(bank, globalSeen) {
     });
   }
 
-  // === 感染症：第何類問題 ===
+  // === 感染症：「第何類感染症？」 ===
   if (infectionStyle) {
     const opts = classOptions(true);
     for (const item of allItems) {
@@ -115,7 +115,7 @@ function buildBankQuestions(bank, globalSeen) {
     }
   }
 
-  // === 特徴・副作用・結合など（抗菌薬や有機化学対応） ===
+  // === 特徴や副作用を含むカテゴリ（抗菌薬など） ===
   const featureRegex = /（(.+?)）/;
   const featureMap = {};
 
@@ -155,7 +155,7 @@ function buildBankQuestions(bank, globalSeen) {
     });
   }
 
-  // === CYP専用問題 ===
+  // === CYP専用 ===
   if (name === "CYP") {
     const CYP_TYPES = ["CYPを誘導する薬物", "CYPを阻害する薬物"];
     for (const item of allItems) {
@@ -251,16 +251,15 @@ function selectAnswer(btn, selected, correct) {
     btn.classList.add("correct");
     feedbackEl.textContent = "正解！";
     score++;
-    review.push({ ok: true, text: questions[current].text, selected, correct });
   } else {
     btn.classList.add("wrong");
     const correctBtn = Array.from(buttons).find(b => b.textContent === correct);
     if (correctBtn) correctBtn.classList.add("correct");
     feedbackEl.textContent = `不正解… 正解：${correct}`;
     wrongSet.push(questions[current]);
-    review.push({ ok: false, text: questions[current].text, selected, correct });
   }
 
+  review.push({ ok: selected === correct, text: questions[current].text, selected, correct });
   nextBtn.disabled = false;
 }
 
@@ -307,19 +306,16 @@ startBtn.addEventListener("click", async () => {
 
 nextBtn.addEventListener("click", nextQuestion);
 quitBtn.addEventListener("click", finishRun);
-
 retryWrongBtn.addEventListener("click", () => {
   if (wrongSet.length === 0) return;
   const bankName = activeBankLbl.textContent.replace("出題範囲：", "");
   startQuiz(wrongSet, bankName);
 });
-
 retryAllBtn.addEventListener("click", () => {
   const selected = bankSelect.value || "__ALL__";
   const pool = filterQuestionsByBank(selected);
   startQuiz(pool, selected);
 });
-
 backToStartBtn.addEventListener("click", () => {
   elResult.classList.add("hidden");
   elQuiz.classList.add("hidden");
@@ -331,12 +327,17 @@ backToStartBtn.addEventListener("click", () => {
   activeBankLbl.textContent = "出題範囲：全部";
 });
 
-// ===== 初期ロード =====
+// ===== 初期ロード（完全リセット） =====
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     if (!ALL_QUESTIONS.length) await loadQuestions();
     if (bankSelect && !bankSelect.value) bankSelect.value = "__ALL__";
     activeBankLbl.textContent = "出題範囲：全部";
+
+    // ✅ 初期状態は選択画面のみ表示
+    elSetup.classList.remove("hidden");
+    elQuiz.classList.add("hidden");
+    elResult.classList.add("hidden");
   } catch (e) {
     console.error("初期ロードに失敗しました。", e);
   }
@@ -351,7 +352,6 @@ bankSelect.addEventListener("change", () => {
 document.addEventListener("DOMContentLoaded", () => {
   const tabQuiz = document.getElementById("tabQuiz");
   const tabGoro = document.getElementById("tabGoro");
-  const quizPane = document.getElementById("quizPane");
   const goroPane = document.getElementById("goroPane");
   const goroSearch = document.getElementById("goroSearch");
   const goroList = document.getElementById("goroList");
@@ -375,8 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       GOROS = data.items || [];
       renderGoros(GOROS);
-    } catch (e) {
-      console.error("goros.json の読み込みに失敗:", e);
+    } catch {
       goroList.innerHTML = `<p class="progress">ゴロ一覧の読み込みに失敗しました。</p>`;
     }
   }
@@ -408,7 +407,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   tabQuiz.addEventListener("click", () => activateTab("quiz"));
   tabGoro.addEventListener("click", () => activateTab("goro"));
-
   goroSearch.addEventListener("input", e => {
     const q = e.target.value.trim().toLowerCase();
     if (!q) return renderGoros(GOROS);

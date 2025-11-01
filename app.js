@@ -394,16 +394,33 @@ document.addEventListener("DOMContentLoaded", () => {
     `).join("");
   }
 
-  function activateTab(name) {
-    const quizActive = name === "quiz";
-    elSetup.classList.toggle("hidden", !quizActive);
-    elQuiz.classList.toggle("hidden", !quizActive);
-    elResult.classList.toggle("hidden", !quizActive);
-    goroPane.classList.toggle("hidden", quizActive);
-    tabQuiz.classList.toggle("active", quizActive);
-    tabGoro.classList.toggle("active", !quizActive);
-    if (!quizActive && !GOROS.length) loadGoros();
+ function activateTab(name) {
+  const quizActive = name === "quiz";
+
+  if (quizActive) {
+    // === ゴロ特集 → クイズタブに戻るとき ===
+    goroPane.classList.add("hidden");
+
+    // ✅ 現在の状態に応じて表示を維持（中断再開対応）
+    if (elResult.classList.contains("hidden") && elQuiz.classList.contains("hidden")) {
+      // どちらも非表示なら → 出題範囲選択画面へ
+      elSetup.classList.remove("hidden");
+    }
+    // 出題中または結果表示中はそのまま保持
+
+  } else {
+    // === クイズ → ゴロ特集を開いたとき ===
+    // クイズ画面は非表示にせず、背面で保持（中断再開）
+    goroPane.classList.remove("hidden");
+
+    // 初回のみゴロ一覧読み込み
+    if (!GOROS.length) loadGoros();
   }
+
+  // === タブの見た目更新 ===
+  tabQuiz.classList.toggle("active", quizActive);
+  tabGoro.classList.toggle("active", !quizActive);
+}
 
   tabQuiz.addEventListener("click", () => activateTab("quiz"));
   tabGoro.addEventListener("click", () => activateTab("goro"));

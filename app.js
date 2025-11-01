@@ -223,43 +223,6 @@ function finishRun() {
     reviewList.appendChild(div);
   });
 
-  // === カテゴリ別正答率集計 ===
-  const stats = {};
-  for (const r of review) {
-    const match = r.text.match(/(一類|二類|三類|四類|五類|食品添加物|特定機能食品|抗菌薬|CYP|放射線核種|有機化学)/);
-    const cat = match ? match[0] : "その他";
-    if (!stats[cat]) stats[cat] = { total: 0, correct: 0 };
-    stats[cat].total++;
-    if (r.ok) stats[cat].correct++;
-  }
-
-  const labels = Object.keys(stats);
-  const data = labels.map(c => Math.round((stats[c].correct / stats[c].total) * 100));
-
-  if (window.quizChart) window.quizChart.destroy();
-  const ctx = document.getElementById("statsChart")?.getContext("2d");
-  if (ctx) {
-    window.quizChart = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels,
-        datasets: [
-          {
-            data,
-            backgroundColor: ["#3b82f6", "#22c55e", "#f97316", "#eab308", "#ef4444", "#a855f7", "#0ea5e9", "#94a3b8"]
-          }
-        ]
-      },
-      options: {
-        plugins: {
-          legend: { position: "bottom" },
-          tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.formattedValue}%` } }
-        }
-      }
-    });
-  }
-}
-
 // ===== 基本制御 =====
 function nextQuestion() {
   if (current < questions.length - 1) {

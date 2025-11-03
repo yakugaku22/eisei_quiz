@@ -222,7 +222,7 @@ function finishRun() {
     div.innerHTML = `${i + 1}. ${status}<br><strong>Q:</strong> ${r.text}<br><strong>あなたの選択:</strong> ${r.selected}<br><strong>正解:</strong> ${r.correct}`;
     reviewList.appendChild(div);
   });
-
+}
 // ===== 基本制御 =====
 function nextQuestion() {
   if (current < questions.length - 1) {
